@@ -1,0 +1,105 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") 
+} 
+
+
+model Usuario {
+  id Int @id @default(autoincrement())
+  nombre  String  
+  email   String @unique
+  password String  
+  telefono String?
+  direcciones Direcciones[]
+  rol  Rol @default(USER)
+  fechaDeRegistro    DateTime  @default(now())
+  pedidos  Pedido[]
+  carrito Carrito? // Relación 1:1 (un usuario tiene un carrito)
+}
+
+
+
+model Carrito {
+  id Int @id @default(autoincrement() )
+  idUsuario  Int  @unique 
+  productos CarritoProducto[]
+  usuario   Usuario @relation(fields: [idUsuario], references: [id])
+}
+
+
+model CarritoProducto {
+    id         Int       @id @default(autoincrement())
+    idCarrito  Int 
+    idProducto   Int 
+    stock  Int 
+    carrito    Carrito  @relation(fields: [idCarrito], references: [id])
+    producto   Producto @relation(fields: [idProducto], references: [id])
+}
+
+
+model Direcciones {
+  id           Int     @id @default(autoincrement())
+  codigoPostal Int
+  pais         String
+  ciudad       String
+  provincia    String?  // Opcional, depende del país
+  calle        String
+  numero       String?  // Número de la casa o edificio
+  referencia   String?  // Indicaciones adicionales
+  tipo         String?  // Casa, Trabajo, Otro
+  usuarioId    Int
+  usuario      Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+
+model Categoria {
+  id  Int @id @default(autoincrement())
+  nombre String  @unique
+   productos Producto[]
+}
+
+model Producto {
+  id Int @id @default(autoincrement())
+  idCategoria Int
+  nombre String
+  precio Float 
+  stock Int 
+  img String 
+  descripcion String?
+  fechaDeCreacion  DateTime @default(now())
+  categoria Categoria    @relation(fields: [idCategoria],references: [id])
+ carritoProductos CarritoProducto[] // Añadido el campo de relación
+  pedidos Pedido[]
+}
+
+model Pedido { // Cambié el nombre de 'Pedidos' a 'Pedido' para singular
+   id        Int      @id @default(autoincrement())
+   idUsuario Int  
+   usuario   Usuario  @relation(fields: [idUsuario], references: [id]) // Añadido el campo idUsuario
+   estado    EstadoPedido  @default(PENDIENTE)
+   idProducto Int 
+   producto Producto @relation(fields: [idProducto], references: [id]) // Asegurado de que el campo 'id' en 'Producto' es único
+   fechaDeCreacion  DateTime @default(now())
+   fechaDeEntrega String? 
+   total Int
+}
+
+
+enum EstadoPedido {
+  ENVIADO
+  EMPAQUETANDO
+  ENTREGADO
+  CANCELADO
+  PENDIENTE
+}
+
+
+enum  Rol {
+   USER
+   ADMIN
+}

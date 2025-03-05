@@ -8,7 +8,6 @@ router.post('/usuarios', async (req, res) => {
    // controlamos todos las execciones 
     try {
       const { nombre, email, contraseña  } = req.body;
-      console.log(req.body)
     // vemos si ya exite el usuario 
       const usuarioExistente = await prisma.usuario.findUnique({
         where: {

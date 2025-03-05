@@ -43,15 +43,18 @@ model CarritoProducto {
 
 
 model Direcciones {
+  nombre       String 
+  barrio       String
+  telefono     String
   id           Int     @id @default(autoincrement())
   codigoPostal Int
   pais         String
   ciudad       String
-  provincia    String?  // Opcional, depende del país
+  provincia    String  // Opcional, depende del país
   calle        String
   numero       String?  // Número de la casa o edificio
   referencia   String?  // Indicaciones adicionales
-  tipo         String?  // Casa, Trabajo, Otro
+  tipo         String  // Casa, Trabajo, Otro
   usuarioId    Int
   usuario      Usuario @relation(fields: [usuarioId], references: [id])
 }
@@ -73,10 +76,11 @@ model Producto {
   descripcion String?
   fechaDeCreacion  DateTime @default(now())
   categoria Categoria    @relation(fields: [idCategoria],references: [id])
- carritoProductos CarritoProducto[] // Añadido el campo de relación
+  carritoProductos CarritoProducto[] // Añadido el campo de relación
   pedidos Pedido[]
 }
 
+// los pedidos son los productos comprados tambien
 model Pedido { // Cambié el nombre de 'Pedidos' a 'Pedido' para singular
    id        Int      @id @default(autoincrement())
    idUsuario Int  
@@ -87,6 +91,8 @@ model Pedido { // Cambié el nombre de 'Pedidos' a 'Pedido' para singular
    fechaDeCreacion  DateTime @default(now())
    fechaDeEntrega String? 
    total Int
+   stock Int 
+
 }
 
 

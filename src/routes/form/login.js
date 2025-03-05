@@ -1,45 +1,56 @@
-import jwt from "jsonwebtoken" 
-import bcrypt from "bcrypt"
-import express from "express" 
-import autenticarUser from "../../middleware/autenticarUser";
-import prisma from "../../prisma/client"
-const router   = express.Router()
+import jwt from "jsonwebtoken"; 
+import bcrypt from "bcrypt"; 
+import express from "express"; 
+import { body, validationResult } from "express-validator"; 
+const router = express.Router(); 
+import prisma from "../../prisma/client.js";
+import { resClient } from "../../resClient.js";
 
-router.post('/login', autenticarUser, async (req, res) => { 
-    try {
-      // Obtener el email y la contraseña del cuerpo de la solicitud
-      const { email, contraseña } = req.body;
-      // Buscar el usuario por email en la base de datos
-      const usuario = await prisma.usuario.findUnique({
-        where: {
-          email
-        } 
-      });
+router.post('/login', 
+    // Validaciones con express-validator
+    body('email').isEmail().withMessage('Email inválido'),
+    body('contraseña').notEmpty().withMessage('La contraseña es requerida'),
+    async (req, res) => {
+        // Manejo de errores de validación
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        
 
-      // Si no se encuentra el usuario, devolver un error
-      if (!usuario) {
-        return res.status(401).json({ error: 'el usuario ya existe' });
-      }
+        try {
+            const { email, contraseña } = req.body;
+            const usuario = await prisma.usuario.findUnique({
+                where: { email }
+            });
+
+            // Verificar si el usuario existe
+            if (!usuario) {
+              resClient(res,401,"El correo  no existe")
+            }
+            const validacionContraseña =  await bcrypt.compare(contraseña, usuario.password);
       
-      // Comparar la contraseña proporcionada con la contraseña hasheada del usuario
-      const isMatch = await bcrypt.compare(contraseña, usuario.contraseña);
-      // Si las contraseñas no coinciden, devolver un error
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Credenciales inválidas' });
-      }
-      // Generar un token de autenticación para el usuario
-      const token = jwt.sign({ id: usuario.id, email: usuario.email }, 'secret');
-      // Devolver el usuario y el token de autenticación
-      res.json({ usuario, token });
-       
-    } catch (error) {
-      // Loggear el error en la consola
-      console.error('Error al iniciar sesión:', error);
-      // Devolver un error al cliente
-      return res.status(500).json({ error: 'Error al iniciar sesión' });
+            if(!validacionContraseña){
+              resClient(res,200,"la contraseña es incorrecta")
+            }
+
+            const token = jwt.sign({
+               id: usuario.id,
+               email: usuario.email,
+               nombre: usuario.nombre,
+               rol: usuario.rol
+               }
+               ,process.env.JWT_SCREAT,
+              { expiresIn: '1d' });
+              // enviamos el token al cliente 
+            res.json({ token });
+            
+            
+        } catch (error) {
+            console.error('Error al iniciar sesión:', error);
+            return res.status(500).json({ error: 'Error al iniciar sesión' });
+        }
     }
-  });
+);
 
-  // Exportación del router para su uso en otros módulos
-  export default router
-
+export default router;

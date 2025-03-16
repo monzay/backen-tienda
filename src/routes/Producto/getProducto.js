@@ -5,7 +5,7 @@ import autenticaUsur from "../../middleware/autenticarUsuario.js";
 import { resClient } from "../../resClient.js";
 const router = express.Router();
 
-router.get('/producto',autenticarToken , autenticaUsur,async (req, res) => {
+router.get('/producto',async (req, res) => {
     try {
         const productos =   await prisma.producto.findMany()
         res.status(201).json({

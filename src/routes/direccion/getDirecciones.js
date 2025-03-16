@@ -6,15 +6,17 @@ import { resClient } from "../../resClient.js";
 
 const router = express.Router();
 router.get(
-  "/direciones",
+  "/direccion",
   autenticarToken,
-  autenticaUsur,
+  autenticaUsur("USER"),
   async (req, res) => {
+
     // dato token user 
     const usuarioId = req.user.id
+    
     try {
         const direciones = await prisma.direcciones.findMany({
-            where:{usuarioId,}
+            where:{usuarioId}
          })
          
          return res.status(201).json({
@@ -26,7 +28,7 @@ router.get(
 
     } catch (error) {
       console.error("error al eviar las direcciones:", error);
-      resClient(res, 500, "error al eviar las direcciones ");
+return resClient(res, 500, "error al eviar las direcciones ");
     }
   }
 );

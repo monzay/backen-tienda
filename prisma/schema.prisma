@@ -92,7 +92,6 @@ model Pedido { // Cambié el nombre de 'Pedidos' a 'Pedido' para singular
    fechaDeEntrega String? 
    total Int
    stock Int 
-
 }
 
 
@@ -109,3 +108,4 @@ enum  Rol {
    USER
    ADMIN
 }
+
